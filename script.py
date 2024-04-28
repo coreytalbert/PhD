@@ -1,9 +1,10 @@
 import pandas as pd
+from datetime import date
 
-df = pd.read_csv('data_master.csv', header=[0,1,2])
+df = pd.read_csv('merged.csv', header=[0,1,2])
 
-regex_pattern = '(Fruits|Vegetables|Proteins|Dairy and Dairy Substitutes|Grains)'
-selected_column_names = df.filter(regex=regex_pattern, axis=1).columns.tolist()
+binary_regex_pattern = '(Fruits|Vegetables|Proteins|Dairy and Dairy Substitutes|Grains)'
+selected_column_names = df.filter(regex=binary_regex_pattern, axis=1).columns.tolist()
 # print(selected_column_names)
 
 field_map = {}
@@ -19,15 +20,24 @@ for key, value in field_map.items():
 
 df = df.copy()
 
-regex_patterns = ['Fruits.*binary', 'Vegetables.*binary', 'Proteins.*binary', 'Dairy and Dairy Substitutes.*binary', 'Grains.*binary']
-for regex_pattern in regex_patterns:
-    column_subset = df.filter(regex=regex_pattern, axis=1).columns.tolist()
+binary_regex_patterns = ['Fruits.*binary', 'Vegetables.*binary', 'Proteins.*binary', 'Dairy and Dairy Substitutes.*binary', 'Grains.*binary']
+for binary_regex_pattern in binary_regex_patterns:
+    binary_column_subset = df.filter(regex=binary_regex_pattern, axis=1).columns.tolist()
     # print(column_subset)
-    subset_sum = df[column_subset].sum(axis=1)
+    subset_sum = df[binary_column_subset].sum(axis=1)
     # print("subset_sum = ", subset_sum)
-    new_sum_multi_column_header = (f"{regex_pattern}_s", f"{regex_pattern}_sum", '')
+    row_0_header = binary_regex_pattern.split(sep = ".")[0] + " binary sum"
+    row_1_header = binary_regex_pattern.split(sep = ".")[0] + " binary sum"
+    new_sum_multi_column_header = (row_0_header, row_1_header, '')
     # print(new_sum_multi_column_header)
     df[new_sum_multi_column_header] = subset_sum
 
+# Calculating the sum for all foods
+binary_sum_regex_pattern = ".*binary sum"
+binary_sum_column_subset = df.filter(regex=binary_sum_regex_pattern, axis=1).columns.tolist()
+subset_sum = df[binary_sum_column_subset].sum(axis=1)
+new_sum_multi_column_header = ("All Foods binary sum", "All foods binary sum", '')
+df[new_sum_multi_column_header] = subset_sum
+
 # print(df.columns)
-df.to_csv('output.csv', index=False)
+df.to_csv(date.today().isoformat() + '-output.csv', index=False)
